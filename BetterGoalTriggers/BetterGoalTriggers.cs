@@ -1,11 +1,8 @@
-﻿using HarmonyLib;
-using oomtm450PuckMod_BetterGoalTriggers.Configs;
+﻿using oomtm450PuckMod_BetterGoalTriggers.Configs;
 using oomtm450PuckMod_BetterGoalTriggers.SystemFunc;
 using System;
-using System.Linq;
-using Unity.Collections;
-using Unity.Netcode;
-using static UnityEngine.GraphicsBuffer;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 namespace oomtm450PuckMod_BetterGoalTriggers {
     /// <summary>
@@ -20,20 +17,35 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         #endregion
 
         #region Fields/Properties
-        /// <summary>
+        /*/// <summary>
         /// Harmony, harmony instance to patch the Puck's code.
         /// </summary>
-        private static readonly Harmony _harmony = new Harmony(Constants.MOD_NAME);
+        private static readonly Harmony _harmony = new Harmony(Constants.MOD_NAME);*/
 
         internal static ServerConfig ServerConfig = new ServerConfig();
         #endregion
 
-        // UIChat.Server_ChatMessageRpc Direct function
-        [HarmonyPatch(typeof(UIChat), nameof(UIChat.Server_ChatMessageRpc))]
-        public static class UIChat_Server_ChatMessageRpc {
-            [HarmonyPrefix]
-            public static bool Prefix(string message, RpcParams rpcParams) {
-                return ProcessRPCHandlerServerChat(rpcParams.Receive.SenderClientId);
+        /// <summary>
+        /// Method called when a scene has being loaded by Unity.
+        /// Used to load assets.
+        /// </summary>
+        /// <param name="message">Dictionary of string and object, content of the event.</param>
+        public static void Event_OnSceneLoaded(Dictionary<string, object> message) {
+            try {
+                // If this is the server, do not use the patch.
+                if (!ServerFunc.IsDedicatedServer())
+                    return;
+
+                Logging.Log("Event_OnSceneLoaded", ServerConfig, true); // TODO : Remove debug logs.
+
+                Scene scene = (Scene)message["scene"];
+                Logging.Log("scene.buildIndex : " + scene.buildIndex, ServerConfig, true); // TODO : Remove debug logs.
+                if (scene == null || scene.buildIndex != 2)
+                    return;
+
+            }
+            catch (Exception ex) {
+                Logging.LogError($"Error in {nameof(Event_OnSceneLoaded)}.\n{ex}", ServerConfig);
             }
         }
 
@@ -45,12 +57,18 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
             try {
                 Logging.Log($"Enabling...", ServerConfig, true);
 
-                _harmony.PatchAll();
-
-                Logging.Log($"Enabled.", ServerConfig, true);
+                //_harmony.PatchAll();
 
                 Logging.Log("Setting server sided config.", ServerConfig, true);
                 ServerConfig = ServerConfig.ReadConfig();
+
+                Logging.Log("Subscribing to events.", ServerConfig, true);
+
+                if (ServerFunc.IsDedicatedServer()) {
+                    EventManager.Instance.AddEventListener("Event_OnSceneLoaded", Event_OnSceneLoaded);
+                }
+
+                Logging.Log($"Enabled.", ServerConfig, true);
 
                 return true;
             }
@@ -68,7 +86,13 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
             try {
                 Logging.Log($"Disabling...", ServerConfig, true);
 
-                _harmony.UnpatchSelf();
+                Logging.Log("Unsubscribing from events.", ServerConfig, true);
+
+                if (ServerFunc.IsDedicatedServer()) {
+                    EventManager.Instance.RemoveEventListener("Event_OnSceneLoaded", Event_OnSceneLoaded);
+                }
+
+                //_harmony.UnpatchSelf();
 
                 Logging.Log($"Disabled.", ServerConfig, true);
                 return true;

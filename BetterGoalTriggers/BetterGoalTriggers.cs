@@ -2,7 +2,7 @@
 using oomtm450PuckMod_BetterGoalTriggers.SystemFunc;
 using System;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
+using UnityEngine;
 
 namespace oomtm450PuckMod_BetterGoalTriggers {
     /// <summary>
@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.0.0DEV";
+        private const string MOD_VERSION = "1.0.0";
         #endregion
 
         #region Fields/Properties
@@ -23,29 +23,55 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         private static readonly Harmony _harmony = new Harmony(Constants.MOD_NAME);*/
 
         internal static ServerConfig ServerConfig = new ServerConfig();
+
+        private static bool _triggersHaveBeenBettered = false;
         #endregion
 
         /// <summary>
-        /// Method called when a scene has being loaded by Unity.
-        /// Used to load assets.
+        /// Method called when a client has connected (joined a server) on the server-side.
+        /// Used to set server-sided stuff after the game has loaded.
         /// </summary>
         /// <param name="message">Dictionary of string and object, content of the event.</param>
-        public static void Event_OnSceneLoaded(Dictionary<string, object> message) {
+        public static void Event_OnClientConnected(Dictionary<string, object> message) {
+            if (!ServerFunc.IsDedicatedServer())
+                return;
+
+            if (_triggersHaveBeenBettered)
+                return;
+
             try {
-                // If this is the server, do not use the patch.
-                if (!ServerFunc.IsDedicatedServer())
-                    return;
+                for (int i = 0; i < LevelManager.Instance.gameObject.transform.childCount; i++) {
+                    Transform levelManagerChild = LevelManager.Instance.gameObject.transform.GetChild(i);
+                    if (levelManagerChild.gameObject.name != "Goal Blue" && levelManagerChild.gameObject.name != "Goal Red")
+                        continue;
 
-                Logging.Log("Event_OnSceneLoaded", ServerConfig, true); // TODO : Remove debug logs.
+                    for (int j = 0; j < levelManagerChild.childCount; j++) {
+                        Transform goalChild = levelManagerChild.GetChild(j);
+                        if (goalChild.gameObject.name == "Goal Trigger") {
+                            // Resize current goal trigger.
+                            goalChild.localScale = new Vector3(goalChild.localScale.x + 0.03f, goalChild.localScale.y, goalChild.localScale.z + 0.03f);
 
-                Scene scene = (Scene)message["scene"];
-                Logging.Log("scene.buildIndex : " + scene.buildIndex, ServerConfig, true); // TODO : Remove debug logs.
-                if (scene == null || scene.buildIndex != 2)
-                    return;
+                            // Add a new goal trigger on the ground.
+                            float teamMod = 1f;
+                            if (levelManagerChild.gameObject.name == "Goal Red")
+                                teamMod = -1f;
 
+                            GameObject groundGoalTrigger = UnityEngine.Object.Instantiate(goalChild.gameObject);
+                            groundGoalTrigger.name = "Goal Trigger Ground";
+                            groundGoalTrigger.transform.SetParent(goalChild.parent);
+                            groundGoalTrigger.transform.position = new Vector3(0, 0, 40.92f * teamMod);
+                            groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 0, 0);
+                            groundGoalTrigger.transform.localScale = new Vector3(0.87f, 1f, 0.74f);
+                            groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, -0.5833f * teamMod);
+                            break;
+                        }
+                    }
+                }
+
+                _triggersHaveBeenBettered = true;
             }
             catch (Exception ex) {
-                Logging.LogError($"Error in {nameof(Event_OnSceneLoaded)}.\n{ex}", ServerConfig);
+                Logging.LogError($"Error in {nameof(Event_OnClientConnected)}.\n{ex}", ServerConfig);
             }
         }
 
@@ -65,7 +91,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                 Logging.Log("Subscribing to events.", ServerConfig, true);
 
                 if (ServerFunc.IsDedicatedServer()) {
-                    EventManager.Instance.AddEventListener("Event_OnSceneLoaded", Event_OnSceneLoaded);
+                    EventManager.Instance.AddEventListener("Event_OnClientConnected", Event_OnClientConnected);
                 }
 
                 Logging.Log($"Enabled.", ServerConfig, true);
@@ -89,8 +115,10 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                 Logging.Log("Unsubscribing from events.", ServerConfig, true);
 
                 if (ServerFunc.IsDedicatedServer()) {
-                    EventManager.Instance.RemoveEventListener("Event_OnSceneLoaded", Event_OnSceneLoaded);
+                    EventManager.Instance.RemoveEventListener("Event_OnClientConnected", Event_OnClientConnected);
                 }
+
+                _triggersHaveBeenBettered = false;
 
                 //_harmony.UnpatchSelf();
 

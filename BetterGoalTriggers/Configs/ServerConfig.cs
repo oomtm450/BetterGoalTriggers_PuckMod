@@ -1,27 +1,21 @@
 ﻿using Newtonsoft.Json;
-using oomtm450PuckMod_Template.SystemFunc;
+using oomtm450PuckMod_BetterGoalTriggers.SystemFunc;
 using System;
 using System.IO;
 
-namespace oomtm450PuckMod_Template.Configs {
+namespace oomtm450PuckMod_BetterGoalTriggers.Configs {
     /// <summary>
-    /// Class containing the configuration from oomtm450_template_serverconfig.json used for this mod.
+    /// Class containing the configuration from oomtm450_sounds_serverconfig.json used for this mod.
     /// </summary>
     public class ServerConfig : IConfig {
         #region Constants
         /// <summary>
         /// Const string, name used when sending the config data to the client.
         /// </summary>
-        internal const string CONFIG_DATA_NAME = Constants.MOD_NAME + "_config";
+        public const string CONFIG_DATA_NAME = Constants.MOD_NAME + "_config";
         #endregion
 
-        #region Fields and Properties
-        /// <summary>
-        /// String, full path for the config file.
-        /// </summary>
-        [JsonIgnore]
-        private readonly string _configPath = Path.Combine(Path.GetFullPath("."), Constants.MOD_NAME + "_serverconfig.json");
-
+        #region Properties
         /// <summary>
         /// Bool, true if the info logs must be printed.
         /// </summary>
@@ -32,37 +26,6 @@ namespace oomtm450PuckMod_Template.Configs {
         /// </summary>
         [JsonIgnore]
         public string ModName { get; } = Constants.MOD_NAME;
-
-        /// <summary>
-        /// Int, number of skaters that are allowed on the ice at the same time per team.
-        /// </summary>
-        public int MaxNumberOfSkaters { get; set; } = 5;
-
-        /// <summary>
-        /// Bool, true if team balancing has to be respected.
-        /// </summary>
-        public bool TeamBalancing { get; set; } = false;
-
-        /// <summary>
-        /// Int, offset in the number of skaters between both teams if TeamBalancing or TeamBalancingGoalie is activated.
-        /// </summary>
-        public int TeamBalanceOffset { get; set; } = 0;
-
-        /// <summary>
-        /// Bool, if a goalie is playing in the red or blue team and if the other team has the same or more skaters, the next position has to be goalie.
-        /// TLDR : Team balancing only if atleast one goalie is playing.
-        /// </summary>
-        public bool TeamBalancingGoalie { get; set; } = false;
-
-        /// <summary>
-        /// Bool, true if admins can bypass the skaters limit.
-        /// </summary>
-        public bool AdminBypass { get; set; } = true;
-
-        /// <summary>
-        /// String array, all admin steam Ids of the server.
-        /// </summary>
-        public string[] AdminSteamIds { get; set; }
         #endregion
 
         #region Methods/Functions
@@ -87,33 +50,39 @@ namespace oomtm450PuckMod_Template.Configs {
         /// Function that reads the config file for the mod and create a ServerConfig object with it.
         /// Also creates the file with the default values, if it doesn't exists.
         /// </summary>
-        /// <param name="adminSteamIds">String array, all admin steam Ids of the server.</param>
         /// <returns>ServerConfig, parsed config.</returns>
-        internal static ServerConfig ReadConfig(string[] adminSteamIds) {
+        internal static ServerConfig ReadConfig() {
             ServerConfig config = new ServerConfig();
 
             try {
-                if (File.Exists(config._configPath)) {
-                    string configFileContent = File.ReadAllText(config._configPath);
+                string rootPath = Path.GetFullPath(".");
+                string configPath = Path.Combine(rootPath, Constants.MOD_NAME + "_serverconfig.json");
+                if (File.Exists(configPath)) {
+                    string configFileContent = File.ReadAllText(configPath);
                     config = SetConfig(configFileContent);
                     Logging.Log($"Server config read.", config, true);
                 }
 
                 try {
-                    File.WriteAllText(config._configPath, config.ToString());
+                    File.WriteAllText(configPath, config.ToString());
                 }
                 catch (Exception ex) {
                     Logging.LogError($"Can't write the server config file. (Permission error ?)\n{ex}", config);
                 }
 
-                Logging.Log($"Wrote server config : {config}", config);
+                Logging.Log($"Wrote server config : {config}", config, true);
             }
             catch (Exception ex) {
                 Logging.LogError($"Can't read the server config file/folder. (Permission error ?)\n{ex}", config);
             }
 
-            config.AdminSteamIds = adminSteamIds;
             return config;
+        }
+
+        internal void LogBan(string log) {
+            string rootPath = Path.GetFullPath(".");
+            string banListPath = Path.Combine(rootPath, Constants.MOD_NAME + "_banlist.log");
+            File.AppendAllText(banListPath, log + "\n");
         }
         #endregion
     }

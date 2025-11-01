@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.0.2";
+        private const string MOD_VERSION = "1.0.3";
         #endregion
 
         #region Fields/Properties
@@ -49,7 +49,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                         Transform goalChild = levelManagerChild.GetChild(j);
                         if (goalChild.gameObject.name == "Goal Trigger") {
                             // Resize current goal trigger.
-                            goalChild.localScale = new Vector3(goalChild.localScale.x + 0.02f, goalChild.localScale.y, goalChild.localScale.z + 0.02f);
+                            goalChild.localScale = new Vector3(goalChild.localScale.x + 0.03f, goalChild.localScale.y, goalChild.localScale.z + 0.03f);
 
                             // Add a new goal trigger on the ground.
                             float teamMod = 1f;

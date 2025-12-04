@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.0.5DEV";
+        private const string MOD_VERSION = "1.0.6";
         #endregion
 
         #region Fields/Properties
@@ -33,7 +33,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// </summary>
         /// <param name="message">Dictionary of string and object, content of the event.</param>
         public static void Event_OnClientConnected(Dictionary<string, object> message) {
-            if (!ServerFunc.IsDedicatedServer() || _triggersHaveBeenBettered)
+            if (_triggersHaveBeenBettered)
                 return;
 
             try {
@@ -57,7 +57,10 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                             groundGoalTrigger.name = "Goal Trigger Ground";
                             groundGoalTrigger.transform.SetParent(goalChild.parent);
                             groundGoalTrigger.transform.position = new Vector3(0, 0, 40.92f * teamMod);
-                            groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 0, 0);
+                            if (levelManagerChild.gameObject.name == "Goal Red")
+                                groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 0, 0);
+                            else
+                                groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 180, 0);
                             groundGoalTrigger.transform.localScale = new Vector3(0.87f, 1f, 0.7f);
                             groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, 0.7f);
                             break;
@@ -87,9 +90,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
                 Logging.Log("Subscribing to events.", ServerConfig, true);
 
-                if (ServerFunc.IsDedicatedServer()) {
-                    EventManager.Instance.AddEventListener("Event_OnClientConnected", Event_OnClientConnected);
-                }
+                EventManager.Instance.AddEventListener("Event_OnClientConnected", Event_OnClientConnected);
 
                 Logging.Log($"Enabled.", ServerConfig, true);
 
@@ -111,9 +112,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
                 Logging.Log("Unsubscribing from events.", ServerConfig, true);
 
-                if (ServerFunc.IsDedicatedServer()) {
-                    EventManager.Instance.RemoveEventListener("Event_OnClientConnected", Event_OnClientConnected);
-                }
+                EventManager.Instance.RemoveEventListener("Event_OnClientConnected", Event_OnClientConnected);
 
                 _triggersHaveBeenBettered = false;
 

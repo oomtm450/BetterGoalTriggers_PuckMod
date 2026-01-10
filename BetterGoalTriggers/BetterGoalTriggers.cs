@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.0.7";
+        private const string MOD_VERSION = "1.0.8";
         #endregion
 
         #region Fields/Properties
@@ -61,7 +61,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                                 groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 0, 0);
                             else
                                 groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 180, 0);
-                            groundGoalTrigger.transform.localScale = new Vector3(0.87f, 1f, 0.705f);
+                            groundGoalTrigger.transform.localScale = new Vector3(0.87f, 1f, 0.71f);
                             groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, 0.7f);
                             break;
                         }

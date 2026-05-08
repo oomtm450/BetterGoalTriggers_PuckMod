@@ -1,4 +1,5 @@
-﻿using oomtm450PuckMod_BetterGoalTriggers.SystemFunc;
+﻿using HarmonyLib;
+using oomtm450PuckMod_BetterGoalTriggers.SystemFunc;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,15 +17,47 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         #endregion
 
         #region Fields/Properties
-        /*/// <summary>
+        /// <summary>
         /// Harmony, harmony instance to patch the Puck's code.
         /// </summary>
-        private static readonly Harmony _harmony = new Harmony(Constants.MOD_NAME);*/
+        private static readonly Harmony _harmony = new Harmony(Constants.MOD_NAME);
 
         internal static Configs.ServerConfig ServerConfig = new Configs.ServerConfig();
 
         private static bool _triggersHaveBeenBettered = false;
+
+        private static DateTime _lastTime_Server_OnPuckEnterGoal_WasCalled = DateTime.MinValue;
         #endregion
+
+        /// <summary>
+        /// Class that patches the Server_OnPuckEnterGoal event from Goal.
+        /// </summary>
+        [HarmonyPatch(typeof(Goal), nameof(Goal.Server_OnPuckEnterGoal))]
+        public class Goal_Server_OnPuckEnterGoal_Patch {
+            [HarmonyPrefix]
+            public static bool Prefix(Puck puck) {
+                if (GameManager.Instance.Phase != GamePhase.Play) {
+                    if (GameManager.Instance.Phase == GamePhase.RedScore || GameManager.Instance.Phase == GamePhase.BlueScore)
+                        return false;
+
+                    return true;
+                }
+
+                try {
+                    DateTime now = DateTime.UtcNow;
+
+                    if ((now - _lastTime_Server_OnPuckEnterGoal_WasCalled).TotalMilliseconds < 1000)
+                        return false;
+
+                    _lastTime_Server_OnPuckEnterGoal_WasCalled = now;
+                }
+                catch (Exception ex) {
+                    Logging.LogError($"Error in {nameof(Goal_Server_OnPuckEnterGoal_Patch)} Prefix().\n{ex}", ServerConfig);
+                }
+
+                return true;
+            }
+        }
 
         /// <summary>
         /// Method called when a client has connected (joined a server) on the server-side.
@@ -88,7 +121,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                     return false;
                 }
 
-                //_harmony.PatchAll();
+                _harmony.PatchAll();
 
                 Logging.Log("Setting server sided config.", ServerConfig, true);
                 ServerConfig = Configs.ServerConfig.ReadConfig();
@@ -121,7 +154,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
                 _triggersHaveBeenBettered = false;
 
-                //_harmony.UnpatchSelf();
+                _harmony.UnpatchSelf();
 
                 Logging.Log($"Disabled.", ServerConfig, true);
                 return true;

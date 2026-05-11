@@ -8,7 +8,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
     /// <summary>
     /// Class containing the main code for the BetterGoalTriggers patch.
     /// </summary>
-    public class BetterGoalTriggers : IPuckMod {
+    public class BetterGoalTriggers : IPuckPlugin {
         #region Constants
         /// <summary>
         /// Const string, version of the mod.

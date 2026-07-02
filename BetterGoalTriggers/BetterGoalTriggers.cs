@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.0.10";
+        private const string MOD_VERSION = "1.0.11";
         #endregion
 
         #region Fields/Properties

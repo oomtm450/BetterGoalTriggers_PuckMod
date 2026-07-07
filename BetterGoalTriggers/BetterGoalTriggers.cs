@@ -91,11 +91,49 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                             groundGoalTrigger.transform.SetParent(goalChild.parent);
                             groundGoalTrigger.transform.position = new Vector3(0, 0, 40.92f * teamMod);
                             if (levelManagerChild.gameObject.name == "Goal Red")
-                                groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 0, 0);
+                                groundGoalTrigger.transform.rotation = Quaternion.Euler(90, 180, 0);
                             else
-                                groundGoalTrigger.transform.rotation = Quaternion.Euler(0, 180, 0);
-                            groundGoalTrigger.transform.localScale = new Vector3(0.8719f, 1f, 0.7119f);
-                            groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, 0.7f);
+                                groundGoalTrigger.transform.rotation = Quaternion.Euler(90, 0, 0);
+                            groundGoalTrigger.transform.localScale = new Vector3(0.873f, 0.712f, 1f);
+                            groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, -0.7f);
+
+                            /*MeshFilter meshFilter = null;
+                            try {
+                                meshFilter = groundGoalTrigger.GetComponent<MeshFilter>();
+                                if (meshFilter == null)
+                                    meshFilter = groundGoalTrigger.AddComponent<MeshFilter>();
+                            }
+                            catch (Exception ex) {
+                                Logging.LogError($"1 : {ex}", ServerConfig);
+                            }
+
+                            MeshRenderer meshRenderer = null;
+                            try {
+                                meshRenderer = groundGoalTrigger.GetComponent<MeshRenderer>();
+                                if (meshRenderer == null)
+                                    meshRenderer = groundGoalTrigger.AddComponent<MeshRenderer>();
+                                meshRenderer.enabled = true;
+                            }
+                            catch (Exception ex) {
+                                Logging.LogError($"2 : {ex}", ServerConfig);
+                            }
+
+                            try {
+                                MeshCollider meshCollider = groundGoalTrigger.GetComponent<MeshCollider>();
+                                if (meshCollider.sharedMesh != null) {
+                                    // Duplicate or share the mesh data with the MeshFilter
+                                    meshFilter.sharedMesh = meshCollider.sharedMesh;
+                                }
+
+                                // 3. Assign a default built-in material so it is visible
+                                Shader testShader = Shader.Find("Universal Render Pipeline/Lit");
+                                if (testShader == null)
+                                    testShader = Shader.Find("HDRP/Lit");
+                                meshRenderer.material = new Material(testShader);
+                            }
+                            catch (Exception ex) {
+                                Logging.LogError($"3 : {ex}", ServerConfig);
+                            }*/
                             break;
                         }
                     }

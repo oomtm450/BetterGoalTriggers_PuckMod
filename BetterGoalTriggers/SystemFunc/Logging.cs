@@ -18,6 +18,14 @@ namespace oomtm450PuckMod_BetterGoalTriggers.SystemFunc {
         /// Function that logs errors to the debug console.
         /// </summary>
         /// <param name="msg">String, message to log.</param>
+        internal static void LogWarning(string msg, IConfig config) {
+            Debug.LogWarning($"[{config.ModName}] {msg}");
+        }
+
+        /// <summary>
+        /// Function that logs errors to the debug console.
+        /// </summary>
+        /// <param name="msg">String, message to log.</param>
         internal static void LogError(string msg, IConfig config) {
             Debug.LogError($"[{config.ModName}] {msg}");
         }

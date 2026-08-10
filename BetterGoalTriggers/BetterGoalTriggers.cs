@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.0.11";
+        private const string MOD_VERSION = "1.1.0";
         #endregion
 
         #region Fields/Properties
@@ -97,49 +97,14 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                             groundGoalTrigger.transform.localScale = new Vector3(0.873f, 0.712f, 1f);
                             groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, -0.7f);
 
-                            /*MeshFilter meshFilter = null;
-                            try {
-                                meshFilter = groundGoalTrigger.GetComponent<MeshFilter>();
-                                if (meshFilter == null)
-                                    meshFilter = groundGoalTrigger.AddComponent<MeshFilter>();
-                            }
-                            catch (Exception ex) {
-                                Logging.LogError($"1 : {ex}", ServerConfig);
-                            }
-
-                            MeshRenderer meshRenderer = null;
-                            try {
-                                meshRenderer = groundGoalTrigger.GetComponent<MeshRenderer>();
-                                if (meshRenderer == null)
-                                    meshRenderer = groundGoalTrigger.AddComponent<MeshRenderer>();
-                                meshRenderer.enabled = true;
-                            }
-                            catch (Exception ex) {
-                                Logging.LogError($"2 : {ex}", ServerConfig);
-                            }
-
-                            try {
-                                MeshCollider meshCollider = groundGoalTrigger.GetComponent<MeshCollider>();
-                                if (meshCollider.sharedMesh != null) {
-                                    // Duplicate or share the mesh data with the MeshFilter
-                                    meshFilter.sharedMesh = meshCollider.sharedMesh;
-                                }
-
-                                // 3. Assign a default built-in material so it is visible
-                                Shader testShader = Shader.Find("Universal Render Pipeline/Lit");
-                                if (testShader == null)
-                                    testShader = Shader.Find("HDRP/Lit");
-                                meshRenderer.material = new Material(testShader);
-                            }
-                            catch (Exception ex) {
-                                Logging.LogError($"3 : {ex}", ServerConfig);
-                            }*/
+                            _triggersHaveBeenBettered = true;
                             break;
                         }
                     }
-                }
 
-                _triggersHaveBeenBettered = true;
+                    if (_triggersHaveBeenBettered)
+                        break;
+                }
             }
             catch (Exception ex) {
                 Logging.LogError($"Error in {nameof(Event_Everyone_OnClientConnected)}.\n{ex}", ServerConfig);

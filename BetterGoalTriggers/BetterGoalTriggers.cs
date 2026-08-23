@@ -13,7 +13,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.1.0";
+        private const string MOD_VERSION = "1.1.1";
 
         private const float BASE_GAME_GOAL_TRIGGER_X_SCALE = 1.08f;
         private const float BASE_GAME_GOAL_TRIGGER_Y_SCALE = 1.08f;
@@ -176,11 +176,15 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
                 Logging.Log("Reverting better goal triggers.", ServerConfig);
 
-                Transform goalTriggerBlue = GameObject.Find("Goal Blue").transform.Find("Goal Trigger");
-                goalTriggerBlue.localScale = _originalGoalTriggerScale;
+                GameObject levelObj = GameObject.Find("Level Default");
+                for (int i = 0; i < levelObj.transform.childCount; i++) {
+                    Transform levelManagerChild = levelObj.transform.GetChild(i);
+                    if (levelManagerChild.gameObject.name != "Goal Blue" && levelManagerChild.gameObject.name != "Goal Red")
+                        continue;
 
-                Transform goalTriggerRed = GameObject.Find("Goal Red").transform.Find("Goal Trigger");
-                goalTriggerRed.localScale = _originalGoalTriggerScale;
+                    Transform goalTrigger = levelManagerChild.Find("Goal Trigger");
+                    goalTrigger.localScale = _originalGoalTriggerScale;
+                }
 
                 foreach (GameObject groundGoalTrigger in _groundGoalTriggers)
                     GameObject.Destroy(groundGoalTrigger);

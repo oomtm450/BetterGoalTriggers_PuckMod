@@ -121,7 +121,6 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         private static void BetterGoalTriggerFunc(GameObject goal) {
             try {
                 Puck puck = PuckManager.Instance.GetPuck();
-                puck.transform.localScale = new Vector3(0.80f, 0.82f, 0.80f);
                 if (puck == null || !puck)
                     _offsetGroundTriggerPuckScale = Vector3.zero;
                 else

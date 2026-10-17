@@ -2,6 +2,7 @@
 using oomtm450PuckMod_BetterGoalTriggers.SystemFunc;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 namespace oomtm450PuckMod_BetterGoalTriggers {
@@ -13,11 +14,17 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         /// <summary>
         /// Const string, version of the mod.
         /// </summary>
-        private const string MOD_VERSION = "1.1.1";
+        private const string MOD_VERSION = "1.2.0";
 
         private const float BASE_GAME_GOAL_TRIGGER_X_SCALE = 1.08f;
         private const float BASE_GAME_GOAL_TRIGGER_Y_SCALE = 1.08f;
         private const float BASE_GAME_GOAL_TRIGGER_Z_SCALE = 0.96f;
+
+        private const float BASE_GAME_GOAL_TRIGGER_X_POSITION = 0;
+        private const float BASE_GAME_GOAL_TRIGGER_Y_POSITION = 0;
+        private const float BASE_GAME_GOAL_TRIGGER_Z_POSITION = 0;
+
+        private const float OFFSET_Z_FOR_EACH_M05_PUCK_SCALE = -0.0225f;
         #endregion
 
         #region Fields/Properties
@@ -31,6 +38,18 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         private static bool _triggersHaveBeenBettered = false;
 
         private static Vector3 _originalGoalTriggerScale = new Vector3(BASE_GAME_GOAL_TRIGGER_X_SCALE, BASE_GAME_GOAL_TRIGGER_Y_SCALE, BASE_GAME_GOAL_TRIGGER_Z_SCALE);
+
+        private static Vector3 _originalGoalTriggerPosition = new Vector3(BASE_GAME_GOAL_TRIGGER_X_POSITION, BASE_GAME_GOAL_TRIGGER_Y_POSITION, BASE_GAME_GOAL_TRIGGER_Z_POSITION);
+
+        private static Vector3 _scale = new Vector3(1.0319f, 1f, 1.0319f);
+
+        private static Vector3 _offset = new Vector3(0, 0, 0);
+
+        private static Vector3 _scaleGroundTrigger = Vector3.one;
+
+        private static Vector3 _offsetGroundTrigger = new Vector3(0, -0.6574f, -0.73f);
+
+        private static Vector3 _offsetGroundTriggerPuckScale = new Vector3(0, 0, 0);
 
         private static DateTime _lastTime_Server_OnPuckEnterGoal_WasCalled = DateTime.MinValue;
 
@@ -101,11 +120,20 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
         private static void BetterGoalTriggerFunc(GameObject goal) {
             try {
+                Puck puck = PuckManager.Instance.GetPuck();
+                puck.transform.localScale = new Vector3(0.80f, 0.82f, 0.80f);
+                if (puck == null || !puck)
+                    _offsetGroundTriggerPuckScale = Vector3.zero;
+                else
+                    _offsetGroundTriggerPuckScale = new Vector3(0, 0, ((1 - ((puck.transform.localScale.x + puck.transform.localScale.z) / 2f)) * 20f) * OFFSET_Z_FOR_EACH_M05_PUCK_SCALE);
+
                 Transform goalTrigger = goal.transform.Find("Goal Trigger");
 
                 // Resize current goal trigger.
                 _originalGoalTriggerScale = goalTrigger.localScale;
-                goalTrigger.localScale = new Vector3(goalTrigger.localScale.x * 1.0319f, goalTrigger.localScale.y, goalTrigger.localScale.z * 1.0319f); // TODO : 1.0319f is for a 0.85 scaled puck, adjust depending on puck scale.
+                goalTrigger.localScale = new Vector3(goalTrigger.localScale.x * _scale.x, goalTrigger.localScale.y * _scale.y, goalTrigger.localScale.z * _scale.z);
+                _originalGoalTriggerPosition = goalTrigger.localPosition;
+                goalTrigger.localPosition = new Vector3(goalTrigger.localPosition.x + _offset.x, goalTrigger.localPosition.y + _offset.y, goalTrigger.localPosition.z + _offset.z);
 
                 // Add a new goal trigger on the ground.
                 GameObject groundGoalTrigger = UnityEngine.Object.Instantiate(goalTrigger.gameObject);
@@ -116,12 +144,13 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
                     groundGoalTrigger.transform.rotation = Quaternion.Euler(90, 180, 0);
                 else
                     groundGoalTrigger.transform.rotation = Quaternion.Euler(90, 0, 0);
-                groundGoalTrigger.transform.localScale = new Vector3(((_originalGoalTriggerScale.x - BASE_GAME_GOAL_TRIGGER_X_SCALE) * 0.873f) + 0.873f, ((_originalGoalTriggerScale.y - BASE_GAME_GOAL_TRIGGER_Y_SCALE) * 0.712f) + 0.712f, ((_originalGoalTriggerScale.z - BASE_GAME_GOAL_TRIGGER_Z_SCALE) * 1f) + 1f);
-                groundGoalTrigger.transform.localPosition = new Vector3(0, -0.6574f, -0.7f);
+                groundGoalTrigger.transform.localScale = new Vector3((((_originalGoalTriggerScale.x - BASE_GAME_GOAL_TRIGGER_X_SCALE) * 0.873f) + 0.873f) * _scaleGroundTrigger.x, (((_originalGoalTriggerScale.y - BASE_GAME_GOAL_TRIGGER_Y_SCALE) * 0.712f) + 0.712f) * _scaleGroundTrigger.y, (((_originalGoalTriggerScale.z - BASE_GAME_GOAL_TRIGGER_Z_SCALE) * 1f) + 1f) * _scaleGroundTrigger.z);
+                groundGoalTrigger.transform.localPosition = new Vector3(_offsetGroundTrigger.x + _offsetGroundTriggerPuckScale.x, _offsetGroundTrigger.y + _offsetGroundTriggerPuckScale.y, _offsetGroundTrigger.z + _offsetGroundTriggerPuckScale.z);
 
                 _groundGoalTriggers.Add(groundGoalTrigger);
 
-                /*MeshFilter meshFilter = null;
+                /*// Add visual for ground trigger.
+                MeshFilter meshFilter = null;
                 try {
                     meshFilter = groundGoalTrigger.GetComponent<MeshFilter>();
                     if (meshFilter == null)
@@ -143,6 +172,50 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
                 try {
                     MeshCollider meshCollider = groundGoalTrigger.GetComponent<MeshCollider>();
+                    if (meshCollider == null)
+                        Logging.LogError("meshCollider.sharedMesh is null !!!!!!!!!!", ServerConfig);
+                    if (meshCollider.sharedMesh != null) {
+                        // Duplicate or share the mesh data with the MeshFilter
+                        meshFilter.sharedMesh = meshCollider.sharedMesh;
+                    }
+                    else
+                        Logging.LogError("meshCollider.sharedMesh is null !!!!!!!!!!", ServerConfig);
+
+                    // 3. Assign a default built-in material so it is visible
+                    Shader testShader = Shader.Find("Universal Render Pipeline/Lit");
+                    if (testShader == null)
+                        testShader = Shader.Find("HDRP/Lit");
+                    if (testShader == null)
+                        Logging.LogError($"{nameof(testShader)} is null !!!!!!!!!!", ServerConfig);
+                    meshRenderer.material = new Material(testShader);
+                }
+                catch (Exception ex) {
+                    Logging.LogError($"3 : {ex}", ServerConfig);
+                }
+
+                // Add visual for normal goal trigger.
+                meshFilter = null;
+                try {
+                    meshFilter = goalTrigger.gameObject.GetComponent<MeshFilter>();
+                    if (meshFilter == null)
+                        meshFilter = goalTrigger.gameObject.AddComponent<MeshFilter>();
+                }
+                catch (Exception ex) {
+                    Logging.LogError($"1 : {ex}", ServerConfig);
+                }
+
+                meshRenderer = null;
+                try {
+                    meshRenderer = goalTrigger.gameObject.GetComponent<MeshRenderer>();
+                    if (meshRenderer == null)
+                        meshRenderer = goalTrigger.gameObject.AddComponent<MeshRenderer>();
+                }
+                catch (Exception ex) {
+                    Logging.LogError($"2 : {ex}", ServerConfig);
+                }
+
+                try {
+                    MeshCollider meshCollider = goalTrigger.gameObject.GetComponent<MeshCollider>();
                     if (meshCollider == null)
                         Logging.LogError("meshCollider.sharedMesh is null !!!!!!!!!!", ServerConfig);
                     if (meshCollider.sharedMesh != null) {
@@ -184,6 +257,7 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
 
                     Transform goalTrigger = levelManagerChild.Find("Goal Trigger");
                     goalTrigger.localScale = _originalGoalTriggerScale;
+                    goalTrigger.localPosition = _originalGoalTriggerPosition;
                 }
 
                 foreach (GameObject groundGoalTrigger in _groundGoalTriggers)
@@ -209,22 +283,73 @@ namespace oomtm450PuckMod_BetterGoalTriggers {
         }
 
         /*/// <summary>
-        /// Class that patches the OnGameStateChanged event from BaseGameMode.
+        /// Class that patches the Client_SendChatMessage event from ChatManager.
         /// </summary>
-        [HarmonyPatch(typeof(BaseGameMode<BaseGameModeConfig>), "OnGameStateChanged")]
-        public class BaseGameMode_OnGameStateChanged_Patch {
+        [HarmonyPatch(typeof(ChatManager), nameof(ChatManager.Client_SendChatMessage))]
+        public class ChatManager_Client_SendChatMessage_Patch {
             [HarmonyPostfix]
-            public static void Postfix(GameState oldGameState, GameState newGameState) {
+            public static void Postfix(string content, bool isQuickChat, bool isTeamChat) {
                 try {
-                    // If this is not the server, do not use the patch.
-                    if (oldGameState.Phase == newGameState.Phase)
-                        return;
+                    if (content.StartsWith(@"/scalex")) {
+                        content = content.Replace(@"/scalex", "").Trim();
 
-                    if (newGameState.Phase == GamePhase.Play)
-                        BetterGoalTriggersFunc();
+                        if (!float.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out float x))
+                            return;
+
+                        _scale = new Vector3(x, _scale.y, _scale.z);
+                        _scaleGroundTrigger = new Vector3(x, _scaleGroundTrigger.y, _scaleGroundTrigger.z);
+                    }
+                    else if (content.StartsWith(@"/scaley")) {
+                        content = content.Replace(@"/scaley", "").Trim();
+
+                        if (!float.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out float y))
+                            return;
+
+                        _scale = new Vector3(_scale.x, y, _scale.z);
+                        _scaleGroundTrigger = new Vector3(_scaleGroundTrigger.x, y, _scaleGroundTrigger.z);
+                    }
+                    else if (content.StartsWith(@"/scalez")) {
+                        content = content.Replace(@"/scalez", "").Trim();
+
+                        if (!float.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out float z))
+                            return;
+
+                        _scale = new Vector3(_scale.x, _scale.y, z);
+                        _scaleGroundTrigger = new Vector3(_scaleGroundTrigger.x, _scaleGroundTrigger.y, z);
+                    }
+                    else if (content.StartsWith(@"/offsetx")) {
+                        content = content.Replace(@"/offsetx", "").Trim();
+
+                        if (!float.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out float x))
+                            return;
+
+                        _offset = new Vector3(x, _offset.y, _offset.z);
+                        _offsetGroundTrigger = new Vector3(x, _offsetGroundTrigger.y, _offsetGroundTrigger.z);
+                    }
+                    else if (content.StartsWith(@"/offsety")) {
+                        content = content.Replace(@"/offsety", "").Trim();
+
+                        if (!float.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out float y))
+                            return;
+
+                        _offset = new Vector3(_offset.x, y, _offset.z);
+                        _offsetGroundTrigger = new Vector3(_offsetGroundTrigger.x, y, _offsetGroundTrigger.z);
+                    }
+                    else if (content.StartsWith(@"/offsetz")) {
+                        content = content.Replace(@"/offsetz", "").Trim();
+
+                        if (!float.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out float z))
+                            return;
+
+                        _offset = new Vector3(_offset.x, _offset.y, z);
+                        _offsetGroundTrigger = new Vector3(_offsetGroundTrigger.x, _offsetGroundTrigger.y, z);
+                    }
+
+                    RevertBetterGoalTriggers();
+                    BetterGoalTriggersFunc();
                 }
                 catch (Exception ex) {
-                    Logging.LogError($"Error in {nameof(BaseGameMode_OnGameStateChanged_Patch)} Postfix().\n{ex}", ServerConfig);
+                    Logging.LogError($"Error in {nameof(ChatManager_Client_SendChatMessage_Patch)} Postfix().\n{ex}", ServerConfig);
                 }
             }
         }*/
